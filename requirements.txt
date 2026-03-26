@@ -1,4 +1,3 @@
 holidays
-tensorflow
 xgboost
 pyarrow==15.0.2
