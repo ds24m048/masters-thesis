@@ -1,3 +1,0 @@
-holidays
-xgboost
-pyarrow==15.0.2
