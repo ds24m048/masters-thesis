@@ -1,5 +1,6 @@
 data/api_keys.txt
-models
+models/*
+!models/xgb_lookback_model_final.joblib
 data/NOAA GFS/processed
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2.zip
