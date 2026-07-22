@@ -171,5 +171,5 @@ then `explainability.ipynb`.
 
 ## Notes
 
-- `data/api_keys.txt` and the `models/` folder (too big files) are gitignored. Model files are
+- All models except the final XGBoost model (too big files) are gitignored. Model files are
   reproducible by re-running `modelling.ipynb`.
