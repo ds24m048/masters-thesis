@@ -2,5 +2,6 @@ data/api_keys.txt
 models
 data/NOAA GFS/processed
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2
+data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2.zip
 .vscode
 .DS_Store
