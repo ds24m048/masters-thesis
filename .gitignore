@@ -1,4 +1,6 @@
 data/api_keys.txt
+data/sarimax_gridsearch*.csv
+data/*lookback_tuning*.csv
 models/*
 !models/xgb_lookback_model_final.joblib
 data/NOAA GFS/processed
