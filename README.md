@@ -53,16 +53,16 @@ coordinates and some wind records are missing them, so the missing locations are
 from the municipality key (`Gemeindeschluessel`) using centroids of the VG250 municipality
 polygons pulled from the geodatenzentrum WFS service. Output: `power_wind.parquet` and
 `power_solar.parquet`, one row per plant with location and capacity. These are not model
-features; they exist only to weight the weather aggregation in the next step.
+features; they exist only to weight the weather forecast aggregation in the next step.
 
 ### NOAA GFS: weather forecasts (`data/NOAA GFS/noaa_gfs.py`, `aggregate_weather_fc.ipynb`)
 
 `noaa_gfs.py` downloads GFS 0.25 degree GRIB2 forecasts from the NOAA public S3 bucket.
 For each target day it selects, from the 06z model run, the 24 forecast hours that cover
 one full local calendar day, accounting for the UTC offset (CET vs CEST). From each file
-it extracts surface solar radiation (`ssrd`), total cloud cover (`tcc`), 2 m temperature
-(`t2m`), surface pressure (`sp`), 2 m relative humidity (`rh2m`), and 100 m wind speed
-(`U100`, computed as the magnitude of the u and v components).
+it extracts surface solar radiation (`ssrd_fc`), total cloud cover (`tcc_fc`), 2 m temperature
+(`t2m_fc`), surface pressure (`sp_fc`), 2 m relative humidity (`rh2m_fc`), and 100 m wind speed
+(`U100_fc`, computed as the magnitude of the u and v components).
 
 The grid is then collapsed to a single national value per variable and hour by a
 **capacity-weighted spatial average**. Using the plant registry from the previous step,
@@ -83,7 +83,7 @@ Target transformation: `asinh(price / c)` with `c = median(|price|)` estimated o
 training data. The features are scaled with a `RobustScaler` fitted on the training data,
 used for all models. All reported errors are back-transformed to EUR/MWh.
 
-Feature set (11 features after selection): `load_fc`, `ssrd`, `U100`,
+Feature set (11 features after selection): `load_fc`, `ssrd_fc`, `U100_fc`,
 `price_lag_24h/48h/168h`, `hour` and `weekday` as sin/cos pairs, and `holiday_not_sunday`.
 The lookback models additionally use a window of past prices: a  48-hour window
 during model-type selection in the first trainings, and a window length tuned as a hyperparameter (over 12 to
@@ -109,7 +109,7 @@ trained under different input strategies that differ in how they supply price hi
 each target hour:
 
 - **Point**: each target hour is predicted independently from its own features only
-  (weather, load forecast, calendar, and the fixed price lags at 24/48/168 hours). No
+  (weather forecast, load forecast, calendar, and the fixed price lags at 24/48/168 hours). No
   contiguous window of recent prices is used, and hours within a day do not depend on each
   other.
 - **Fixed lookback**: in addition to the point features, a contiguous window of the most
