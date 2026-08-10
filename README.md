@@ -95,7 +95,7 @@ Chronological split, evaluated once on the test set:
 |------------|-----------------------|---------------------------------------|
 | Train      | 2023-01-01 to 2025-01 | model fitting and CV tuning           |
 | Validation | 2025-01 to 2025-07    | first model-type selection            |
-| Test       | 2025-07 to 2026-01    | final evaluation                      |
+| Test       | 2025-07 to 2026-01    | final model selection                 |
 
 ## Models
 
@@ -135,8 +135,8 @@ The models are compared and finalized in two steps:
 2. **Final training.** The best model overall (SARIMAX), together with the best-performing
    classical ML model (XGBoost) and the best-performing deep-learning sequence model
    (LSTM), are retrained on the combined train+val set. In this step the lookback window
-   length for XGBoost and LSTM is tuned as a hyperparameter alongside the others, and each finalized model is
-   evaluated once on the test set.
+   length for XGBoost and LSTM is tuned as a hyperparameter alongside the others, and the 
+   models are compared on the test set to find the final best performing model.
 
 
 ## Results
