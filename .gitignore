@@ -1,4 +1,5 @@
 data/api_keys.txt
+eda2.ipynb
 data/sarimax_gridsearch*.csv
 data/*lookback_tuning*.csv
 models/*

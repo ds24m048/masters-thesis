@@ -79,15 +79,19 @@ Output: `weather_forecast.parquet`.
 
 ## Method
 
-Target transformation: `asinh(price / c)` with `c = median(|price|)` estimated on the
-training data. The features are scaled with a `RobustScaler` fitted on the training data,
-used for all models. All reported errors are back-transformed to EUR/MWh.
+Target transformation: `asinh(price / c)`, where `c = median(|price|)` is the median of
+the absolute prices. The scale constant is fitted on training data only and re-fitted on
+training plus validation data for the final models. Features are scaled with a
+`RobustScaler` fitted on the corresponding training sample. Reported errors are
+back-transformed to EUR/MWh using `price = c * sinh(transformed_price)`. The same asinh transformation
+is applied to the price-lag features before these features are additionally scaled
+with the `RobustScaler`.
 
 Feature set (11 features after selection): `load_fc`, `ssrd_fc`, `U100_fc`,
 `price_lag_24h/48h/168h`, `hour` and `weekday` as sin/cos pairs, and `holiday_not_sunday`.
-The lookback models additionally use a window of past prices: a  48-hour window
-during model-type selection in the first trainings, and a window length tuned as a hyperparameter (over 12 to
-168 hours) in the second trainings.
+The Day-Anchored and Recursive Rolling-Lookback Strategies additionally use a window
+of past prices: a 48-hour window during model-type selection in the first training
+stage, and a window length tuned from 12 to 168 hours in the second training stage.
 
 Chronological split, evaluated once on the test set:
 
@@ -108,23 +112,25 @@ setting, since the day-ahead prices themselves are all determined on the precedi
 trained under different input strategies that differ in how they supply price history to
 each target hour:
 
-- **Point**: each target hour is predicted independently from its own features only
+- **Base-Feature Strategy**: each target hour is predicted independently from its own features only
   (weather forecast, load forecast, calendar, and the fixed price lags at 24/48/168 hours). No
   contiguous window of recent prices is used, and hours within a day do not depend on each
   other.
-- **Fixed lookback**: in addition to the point features, a contiguous window of the most
+- **Day-Anchored Lookback Strategy**: in addition to the base features, a contiguous window of the most
   recent actually observed prices is added as input. The window is day-anchored: it ends at
   the last price known before the forecast is issued, so every hour of the target day sees
-  the same real price history ending on the last our of the day before the delivery day.
-- **Rollout**: the model predicts the target day hour by hour, and the lookback window
+  the same real price history ending on the last hour of the day before the delivery day.
+- **Recursive Rolling-Lookback Strategy**: the model predicts the target day hour by hour, and the lookback window
   advances into the horizon by feeding the model's own predictions back in as inputs for
   the later hours (recursive multi-step forecasting). For window positions that fall on the
   delivery day the model's own predictions are used, while positions on the previous day
   and earlier use the actual observed prices, which are already known at forecast time.
 
 The classical ML models are run in all three strategies. The deep-learning models are
-sequence models that require a price window as input, so they are run only in the fixed
-lookback and rollout strategies, not point.
+sequence models that require a price window as input, so they are run only with the
+Day-Anchored and Recursive Rolling-Lookback Strategies, not the Base-Feature Strategy.
+The notebook uses the concise suffixes `_base`, `_anchored`, and `_rolling` for these
+strategies; comments, tables, and documentation use their full names.
 
 ### Two-step model selection
 
@@ -132,11 +138,11 @@ The models are compared and finalized in two steps:
 
 1. **Comparison.** All 15 candidate models are trained on the training set and compared on
    the validation set. In this step the price-history windows are fixed at 48 hours.
-2. **Final training.** The best model overall (SARIMAX), together with the best-performing
-   classical ML model (XGBoost) and the best-performing deep-learning sequence model
-   (LSTM), are retrained on the combined train+val set. In this step the lookback window
-   length for XGBoost and LSTM is tuned as a hyperparameter alongside the others, and the 
-   models are compared on the test set to find the final best performing model.
+2. **Final training.** The best model overall (SARIMAX), together with XGBoost using the
+   Day-Anchored Lookback Strategy and LSTM using the same strategy, are retrained on the
+   combined train+val set. In this step the lookback window length for XGBoost and LSTM is
+   tuned as a hyperparameter alongside the others, and the models are compared on the test
+   set to find the final best-performing model.
 
 
 ## Results
@@ -150,8 +156,9 @@ Test results (step 2, finalized models):
 
 ![Test results](assets/test_results.png)
 
-Final model: **XGBoost with a fixed lookback** retrained on train+val with a 
-24-hour window, with a test MAE of about 13.5 EUR/MWh wins against **SARIMAX** and **LSTM with a fixed lookback**.
+Final model: **XGBoost using the Day-Anchored Lookback Strategy**, retrained on train+val
+with a 24-hour window, achieves a test MAE of about 13.5 EUR/MWh and outperforms
+**SARIMAX** and **LSTM using the Day-Anchored Lookback Strategy**.
 
 ## Explainability
 
