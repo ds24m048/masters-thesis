@@ -9,3 +9,4 @@ data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2.zip
 .vscode
 .DS_Store
+make_variable_table.py
