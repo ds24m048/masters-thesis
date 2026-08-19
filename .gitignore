@@ -1,9 +1,9 @@
 data/api_keys.txt
 eda2.ipynb
 data/sarimax_gridsearch*.csv
-data/*lookback_tuning*.csv
+data/*_tuning*.csv
 models/*
-!models/xgb_lookback_model_final.joblib
+!models/xgb_anchored_final.ubj
 data/NOAA GFS/processed
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2
 data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2.zip
