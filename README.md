@@ -2,8 +2,8 @@
 
 Code for a master's thesis on forecasting the German day-ahead electricity price.
 The project covers the full workflow: data acquisition, exploratory analysis, model
-selection across statistical, machine-learning and deep-learning methods, and a
-TreeSHAP-based explainability analysis of the final model.
+selection across statistical, machine-learning, deep-learning and hybrid methods,
+followed by a TreeSHAP-based explainability analysis of the final model.
 
 ## Repository structure
 
@@ -92,6 +92,9 @@ Feature set (11 features after selection): `load_fc`, `ssrd_fc`, `U100_fc`,
 The Day-Anchored and Recursive Rolling-Lookback Strategies additionally use a window
 of past prices: a 48-hour window during model-type selection in the first training
 stage, and a window length tuned from 12 to 168 hours in the second training stage.
+The SARIMAX-XGBoost hybrid instead supplies its residual learner with a day-anchored
+window of past SARIMAX residuals. This window is fixed at 48 hours in the first stage
+and tuned over candidates from 6 to 72 hours in the second stage.
 
 Chronological split, evaluated once on the test set:
 
@@ -103,8 +106,14 @@ Chronological split, evaluated once on the test set:
 
 ## Models
 
-Baselines (naive persistence, ARIMA), SARIMAX, classical ML (XGBoost, Random Forest, SVR)
-and deep learning (LSTM, BiLSTM).
+The evaluation includes a naive persistence benchmark. The model candidates comprise
+the statistical ARIMA and SARIMAX models, classical ML (XGBoost, Random Forest and
+SVR), deep learning (LSTM and BiLSTM), and two hybrid designs. Transformer-BiLSTM
+places a Transformer encoder in front of a BiLSTM and is evaluated with both lookback
+strategies. SARIMAX-XGBoost combines the day-by-day multi-step SARIMAX forecast with
+an XGBoost residual learner on the transformed target scale. Its out-of-sample
+residual training series is generated in consecutive six-month blocks before the
+residual learner is tuned.
 
 The forecast is issued once per day for all 24 hours of the following day, so at forecast
 time no actual price of the target day is known. This mirrors a realistic day-ahead
@@ -126,23 +135,25 @@ each target hour:
   delivery day the model's own predictions are used, while positions on the previous day
   and earlier use the actual observed prices, which are already known at forecast time.
 
-The classical ML models are run in all three strategies. The deep-learning models are
-sequence models that require a price window as input, so they are run only with the
+The classical ML models are run in all three strategies. The recurrent and
+Transformer-BiLSTM models require a price sequence and are therefore run only with the
 Day-Anchored and Recursive Rolling-Lookback Strategies, not the Base-Feature Strategy.
-The notebook uses the concise suffixes `_base`, `_anchored`, and `_rolling` for these
-strategies; comments, tables, and documentation use their full names.
+The SARIMAX-XGBoost hybrid uses only a day-anchored history of past residuals. The
+notebook uses the concise suffixes `_base`, `_anchored`, and `_rolling` for the three
+price-input strategies; comments, tables, and documentation use their full names.
 
 ### Two-step model selection
 
 The models are compared and finalized in two steps:
 
-1. **Comparison.** All 15 candidate models are trained on the training set and compared on
-   the validation set. In this step the price-history windows are fixed at 48 hours.
-2. **Final training.** The best model overall (SARIMAX), together with XGBoost using the
-   Day-Anchored Lookback Strategy and LSTM using the same strategy, are retrained on the
-   combined train+val set. In this step the lookback window length for XGBoost and LSTM is
-   tuned as a hyperparameter alongside the others, and the models are compared on the test
-   set to find the final best-performing model.
+1. **Comparison.** All 18 candidate models are trained on the training set and compared on
+   the validation set. In this step contiguous price and residual windows are fixed at
+   48 hours. SARIMAX-XGBoost achieves the lowest validation MAE.
+2. **Final training.** SARIMAX-XGBoost, SARIMAX, XGBoost using the Day-Anchored Lookback
+   Strategy, and LSTM using the same strategy are retrained on the combined train+val
+   set. The price-window lengths for XGBoost and LSTM and the residual-window length for
+   SARIMAX-XGBoost are tuned alongside their other hyperparameters. The four models are
+   then compared once on the test set to identify the final model by MAE.
 
 
 ## Results
@@ -156,9 +167,11 @@ Test results (step 2, finalized models):
 
 ![Test results](assets/test_results.png)
 
-Final model: **XGBoost using the Day-Anchored Lookback Strategy**, retrained on train+val
-with a 24-hour window, achieves a test MAE of about 13.5 EUR/MWh and outperforms
-**SARIMAX** and **LSTM using the Day-Anchored Lookback Strategy**.
+Final model by the primary MAE criterion: **XGBoost using the Day-Anchored Lookback
+Strategy**, retrained on train+val with a 24-hour window, achieves a test MAE of
+13.46 EUR/MWh. **SARIMAX-XGBoost** follows closely at 13.49 EUR/MWh and records the
+lowest test RMSE at 21.13 EUR/MWh, compared with 22.51 EUR/MWh for the final XGBoost
+model.
 
 ## Explainability
 
@@ -178,5 +191,6 @@ then `explainability.ipynb`.
 
 ## Notes
 
-- All models except the final XGBoost model (too big files) are gitignored. Model files are
-  reproducible by re-running `modelling.ipynb`.
+- Trained model files are gitignored except for `models/xgb_anchored_final.ubj`, which is
+  required by `explainability.ipynb`. All model files are reproducible by re-running
+  `modelling.ipynb`.

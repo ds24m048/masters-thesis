@@ -1,6 +1,6 @@
 data/api_keys.txt
 eda2.ipynb
-data/sarimax_gridsearch*.csv
+data/sarimax_*.csv
 data/*_tuning*.csv
 models/*
 !models/xgb_anchored_final.ubj
