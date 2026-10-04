@@ -1,5 +1,5 @@
 data/api_keys.txt
-eda2.ipynb
+plots.ipynb
 data/sarimax_*.csv
 data/*_tuning*.csv
 models/*
@@ -10,3 +10,6 @@ data/Marktstammdatenregister/Gesamtdatenexport_20260101_25.2.zip
 .vscode
 .DS_Store
 make_variable_table.py
+assets/*
+!assets/validation_results.png
+!assets/test_results.png

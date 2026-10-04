@@ -10,7 +10,7 @@ followed by a TreeSHAP-based explainability analysis of the final model.
 ```
 .
 ├── eda.ipynb              Exploratory data analysis of the target and features
-├── modelling.ipynb        Feature selection, model training, validation and testing
+├── modelling.ipynb        Preprocessing, feature selection, model training, validation and testing
 ├── explainability.ipynb   TreeSHAP analysis of the final XGBoost model
 ├── data/
 │   ├── ENTSOE/
@@ -24,8 +24,10 @@ followed by a TreeSHAP-based explainability analysis of the final model.
 │   │   ├── noaa_gfs.py                      downloads and aggregates GFS forecasts
 │   │   ├── aggregate_weather_fc.ipynb       merges the daily files
 │   │   └── weather_forecast.parquet
-│   └── *.csv                                saved hyperparameter-tuning results
-└── models/                (gitignored) trained model files
+│   └── *.csv                                generated tuning results (gitignored)
+├── models/
+│   └── xgb_anchored_final.ubj               final model used for explainability
+└── requirements.txt                         pinned Python dependencies
 ```
 
 ## Data pipeline
@@ -41,7 +43,7 @@ from the ENTSO-E Transparency Platform via the `entsoe-py` API (API key read fro
 `data/api_keys.txt`). The two series arrive at different and changing granularities:
 the load forecast is quarter-hourly throughout, and the price switches from hourly to
 quarter-hourly. Both are resampled to a common hourly grid (price by mean,
-load by sum), and missing timestamps are filled by linear interpolation. Output:
+load by mean), and missing timestamps are filled by linear interpolation. Output:
 `entsoe_price_and_loadfc.parquet`.
 
 ### Marktstammdatenregister: plant registry (`data/Marktstammdatenregister/power_units.ipynb`)
@@ -60,7 +62,7 @@ features; they exist only to weight the weather forecast aggregation in the next
 `noaa_gfs.py` downloads GFS 0.25 degree GRIB2 forecasts from the NOAA public S3 bucket.
 For each target day it selects, from the 06z model run, the 24 forecast hours that cover
 one full local calendar day, accounting for the UTC offset (CET vs CEST). From each file
-it extracts surface solar radiation (`ssrd_fc`), total cloud cover (`tcc_fc`), 2 m temperature
+it extracts surface solar radiation downwards (`ssrd_fc`), total cloud cover (`tcc_fc`), 2 m temperature
 (`t2m_fc`), surface pressure (`sp_fc`), 2 m relative humidity (`rh2m_fc`), and 100 m wind speed
 (`U100_fc`, computed as the magnitude of the u and v components).
 
@@ -100,9 +102,9 @@ Chronological split, evaluated once on the test set:
 
 | Split      | Period                | Use                                   |
 |------------|-----------------------|---------------------------------------|
-| Train      | 2023-01-01 to 2025-01 | model fitting and CV tuning           |
-| Validation | 2025-01 to 2025-07    | first model-type selection            |
-| Test       | 2025-07 to 2026-01    | final model selection                 |
+| Train      | 2023-01-01 to 2024-12-31 | model fitting and CV tuning        |
+| Validation | 2025-01-01 to 2025-06-30 | first model-type selection         |
+| Test       | 2025-07-01 to 2025-12-31 | final model selection              |
 
 ## Models
 
@@ -176,18 +178,19 @@ model.
 ## Explainability
 
 `explainability.ipynb` loads the final model and applies exact TreeSHAP:
-global importance, grouped and per-window-position importance, dependence plots,
-temporal and seasonal contribution shares, and local
-waterfall explanations for characteristic hours. Cyclic feature pairs (hour, weekday)
-are collapsed into single features by summing their SHAP values.
+global and grouped importance, per-window-position and price-history analyses,
+dependence plots, daily holiday attributions, relative group contribution shares by
+delivery hour, and local waterfall explanations for characteristic hours. Cyclic
+feature pairs (hour, weekday) are collapsed into single features by summing their
+SHAP values.
 
 ## Running
 
-The modelling notebook is written for Google Colab (each starts with a Drive-mount cell).
-They can also run locally with the usual scientific Python stack
-(pandas, numpy, scikit-learn, statsmodels, xgboost, tensorflow/keras, shap, matplotlib,
-holidays). Run order: `eda.ipynb`, then `modelling.ipynb` (produces the model files),
-then `explainability.ipynb`.
+The notebooks can be run from the repository root after installing the pinned
+dependencies in `requirements.txt`. The complete modelling workflow requires a
+CUDA-capable environment because XGBoost and the cuML implementations of RandomForest
+and SVR use GPU acceleration. Run order: `eda.ipynb`, then `modelling.ipynb` (produces
+the model files), then `explainability.ipynb`.
 
 ## Notes
 

@@ -352,30 +352,26 @@ def main() -> None:
     """
     month_start = time.perf_counter()
 
-    month = MONTH
-    start_day = START_DAY
-    run = RUN
-
     # Load plant registry data (coordinates + installed capacity per plant)
     df_wind_power = pd.read_parquet(POWER_DIR / "power_wind.parquet")
     df_solar_power = pd.read_parquet(POWER_DIR / "power_solar.parquet")
 
     # Build list of dates and optionally skip already-processed days via START_DAY
-    dates = month_dates(month)
-    if not 1 <= start_day <= len(dates):
-        raise ValueError(f"START_DAY must be between 1 and {len(dates)} for month {month}.")
-    dates = dates[start_day - 1 :]
-    print(f"Processing month {month} from day {start_day} ({len(dates)} days)")
+    dates = month_dates(MONTH)
+    if not 1 <= START_DAY <= len(dates):
+        raise ValueError(f"START_DAY must be between 1 and {len(dates)} for month {MONTH}.")
+    dates = dates[START_DAY - 1 :]
+    print(f"Processing month {MONTH} from day {START_DAY} ({len(dates)} days)")
 
     for date in dates:
         print(f"\n=== Start day {date} ===")
-        process_day(date, run, df_wind_power, df_solar_power)
+        process_day(date, RUN, df_wind_power, df_solar_power)
 
     elapsed_s = time.perf_counter() - month_start
     elapsed_h = int(elapsed_s // 3600)
     elapsed_m = int((elapsed_s % 3600) // 60)
     elapsed_sec = elapsed_s % 60
-    print(f"\nTotal runtime for month {month}: {elapsed_h:02d}:{elapsed_m:02d}:{elapsed_sec:05.2f}")
+    print(f"\nTotal runtime for month {MONTH}: {elapsed_h:02d}:{elapsed_m:02d}:{elapsed_sec:05.2f}")
 
 
 if __name__ == "__main__":
