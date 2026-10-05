@@ -15,11 +15,10 @@
 │   │   ├── power_units.ipynb               parses the plant registry
 │   │   ├── power_wind.parquet
 │   │   └── power_solar.parquet
-│   ├── NOAA GFS/
-│   │   ├── noaa_gfs.py                      downloads and aggregates GFS forecasts
-│   │   ├── aggregate_weather_fc.ipynb       merges the daily files
-│   │   └── weather_forecast.parquet
-│   └── *.csv                                generated tuning results (gitignored)
+│   └── NOAA GFS/
+│       ├── noaa_gfs.py                      downloads and aggregates GFS forecasts
+│       ├── aggregate_weather_fc.ipynb       merges the daily files
+│       └── weather_forecast.parquet
 ├── models/
 │   └── xgb_anchored_final.ubj               final model used for explainability
 └── requirements.txt                         pinned Python dependencies
