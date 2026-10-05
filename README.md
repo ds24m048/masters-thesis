@@ -1,9 +1,4 @@
-# Day-Ahead Electricity Price Forecasting
-
-Code for a master's thesis on forecasting the German day-ahead electricity price.
-The project covers the full workflow: data acquisition, exploratory analysis, model
-selection across statistical, machine-learning, deep-learning and hybrid methods,
-followed by a TreeSHAP-based explainability analysis of the final model.
+# Explaining Day-Ahead Electricity Price Forecasts in the German Market: A Comparative Model Evaluation
 
 ## Repository structure
 
@@ -78,6 +73,16 @@ capacity dominate the national average. Results are written as one Parquet file 
 `aggregate_weather_fc.ipynb` concatenates the daily files, converts to `Europe/Berlin`,
 removes duplicate timestamps and fills three missing timestamps by linear interpolation. 
 Output: `weather_forecast.parquet`.
+
+## Data sources and licences
+
+Processed data under `data/` is redistributed under the terms of the original sources.
+All four datasets were modified (resampling, filtering and aggregation; see *Data pipeline*).
+
+- **ENTSO-E Transparency Platform** — used under its [Terms of Use](https://transparencyplatform.zendesk.com/hc/en-us/articles/40921911218961-Legal-Terms-and-Conditions); items on the platform's re-use list are provided under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **Marktstammdatenregister** — Bundesnetzagentur, bulk data extract, reference date 2026-01-01, <https://www.marktstammdatenregister.de>, [dl-de/by-2-0](https://www.govdata.de/dl-de/by-2-0).
+- **VG250** — © BKG (2026) dl-de/by-2-0, data sources: <https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_vg_nuts.pdf>.
+- **NOAA GFS** — National Centers for Environmental Prediction, public domain. Derived values here are not official NOAA products.
 
 ## Method
 
